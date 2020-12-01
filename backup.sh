@@ -1,10 +1,10 @@
 #!/bin/bash
-# by Kaputt4 and Mikiped00
+# Created by Kaputt4 and Mikiped00
 #
 
 #
-# Función checkMandates()
-# Comprueba que estén instalados todos los mandatos necesarios para la ejecución del script
+# Function checkCommands()
+# Check all necessary commands are installed
 #
 
 function checkCommands(){
@@ -13,64 +13,63 @@ function checkCommands(){
 		if ! $mandate --version &> /dev/null
 		then
 			ERROR=2
-			echo -e "\n Mandato $mandate no encontrado en el sistema. \n Ejecute sudo apt-get $mandate o actualice el sistema con sudo apt-get update && sudo apt-get upgrade"
+			echo -e "\n Command $mandate Not found. \n Execute sudo apt-get $mandate or update using sudo apt-get update && sudo apt-get upgrade"
 		fi
 	done
 }
 #
-# Función copy()
-# Recibe como parámetro un usuario, y se encarga de comprobar que
-# exista /home y lo comprime en /tmp
+# Function copy()
+# Receive an user like argument and checks if /home exits then compress it in /tmp
 #
 
 function copy(){
-	# Comprueba si el usuario tiene /home
+	# Checks if user has /home
 	if test `cat /etc/passwd | cut -d: -f1,6 | grep -w -c ^$USERV:/home` -gt 0
 	then
 		if test `cat /etc/passwd | cut -d: -f1,7 | grep -c ^$USERV:.*/nologin` -eq 0
 		then
-			echo -e " \nSe va a realizar la copia del usuario $USERV"
-			echo -e " \tSe van a comprimir: $(tree --noreport /home/$USERV | wc -l) ficheros y directorios"
-			tar --exclude=".*" -czf /tmp/$USERV"_"$(date +%Y_%m_%d).tar.gz -C /home/ $USERV 2> /dev/null #Comprime el directorio /home
-			# Comprueba si no ha dado ningún error a la hora de comprimir
+			echo -e " \nCopying $USERV"
+			echo -e " \tCompressing: $(tree --noreport /home/$USERV | wc -l) files and directories"
+			tar --exclude=".*" -czf /tmp/$USERV"_"$(date +%Y_%m_%d).tar.gz -C /home/ $USERV 2> /dev/null #Compress /home
+			# Checks compressing errors
 			if test "${PIPESTATUS[0]}" -ne 2
 			then
 				((COUNT+=1))
-				echo -e "\n\tEl archivo $USERV"_"$(date +%Y_%m_%d).tar.gz se ha creado correctamente con los permisos: `ls -l /tmp/$USERV"_"$(date +%Y_%m_%d).tar.gz | cut -d' ' -f1` "
+				echo -e "\n\tFile $USERV"_"$(date +%Y_%m_%d).tar.gz was succesfully created with permissions: `ls -l /tmp/$USERV"_"$(date +%Y_%m_%d).tar.gz | cut -d' ' -f1` "
 			else
-				# Envía error a stderr
-				>&2 echo -e "\tError a la hora de comprimir los archivos."
+				# Send error to stderr
+				>&2 echo -e "\tError compressing files."
 				ERROR=1
 			fi
 		else
-			# Envía error a stderr
-			>&2 echo -e " \nEl usuario $USERV no puede ser utilizado para iniciar sesión, por lo que su directorio /home no existe"
+			# Send error to stderr
+			>&2 echo -e " \nUser $USERV can not be used to login. /home does not exist."
 		fi
 	else
-		echo -e " \nEl usuario $USERV no tiene directorio /home/$USERV"
+		echo -e " \nUser $USERV does not have /home/$USERV"
 	fi
 }
 
 
-# Imprime logo
+# Print name
 echo -e "\n\n ____                _                  \n|  _ \              | |                 \n| |_) |  __ _   ___ | | __ _   _  _ __  \n|  _ <  / _\` | / __|| |/ /| | | || '_ \ \n| |_) || (_| || (__ |   < | |_| || |_) |\n|____/  \__,_| \___||_|\_\ \__,_|| .__/ \n                                 | |    \n                                 |_|    \n"
 echo "Created by Kaputt4 and Mikiped00"
 
-echo -e "\nEl usuario $USER va a realizar una copia de seguridad:"
-echo -e "Fecha: `date`." 
-echo -e "Versión bash: $BASH_VERSION "
-ERROR=0 # Guarda valor de los errores
-COUNT=0 # Cuenta archivos .tar.gz generados
+echo -e "\nUser $USER is going to do a backup:"
+echo -e "Date: `date`." 
+echo -e "Bash version: $BASH_VERSION "
+ERROR=0 # Saves error's value.
+COUNT=0 #  Counts .tar.gz files generated.
 
-# Comprueba la instalación de los mandatos necesarios y continúa si no ha habido errores
+# Checks that all necessary commands are installed
 checkCommands
 if test $ERROR -eq 0
 then
-	# Comprueba si tiene argumentos o no
+	# Check argument's number
 	if test $# -ne 0
 	then 
-		re="^[a-zA-Z][-A-Za-z0-9_]*\$" # Almacena caracteres permitidos de argumentos
-		# Comprueba parámetros. Si hay un argumento con sintaxis incorrecta, se aborta la ejecución
+		re="^[a-zA-Z][-A-Za-z0-9_]*\$" # Character's allowed
+		# Check parameter. If a parameter has incorrect sintax then stop executing. 
 		for PARAM in $@ 
 		do
 			if ! [[ $PARAM =~ $re ]]
@@ -80,7 +79,7 @@ then
 		done
 		if  test $ERROR -ne 2 
 		then
-			# Por cada argumento, se comprueba si existe y en el caso que exista, se llama la función copy() con el usuario como parámetro. Si no existe, devuelve 1, no se aborta la ejecución
+			# For each param, checks if it exists, then calls copy(). If it not exists, returns error code 1 but keeps executing. 
 			for USERV in $@
 			do
 				EXIST=`cat /etc/passwd | cut -d: -f1,6 | grep -w -c $USERV` 
@@ -89,23 +88,23 @@ then
 					copy $USERV					
 				else
 					ERROR=1
-					# Envía error a stderr
-					>&2 echo -e "\nEl usuario $USERV no está dado de alta en el sistema."
+					# Sent error to stderr
+					>&2 echo -e "\nUser $USERV is not registered in the system."
 				fi
 			done
 		else
-			# Envía error a stderr
-			>&2 echo -e "\nHas introducido un argumento con sintaxis incorrecta."
+			# Send error to stderr
+			>&2 echo -e "\nArguments do not have the correct syntax."
 		fi
 	else
-		# Busca todos los usuarios del fichero /etc/passwd
+		# Execute copy() for each user in /etc/passwd
 		for USERV in `cat /etc/passwd | cut -d: -f1`
 		do 
 			copy $USERV
 		done 
 	fi
 fi
-# Si no ha generado ningún archivo, el código de error es 2
+# If none files were generated, then return 2.
 if test $COUNT -eq 0; then ERROR=2; fi
-echo -e "\nSe han creado $COUNT archivos comprimidos."
+echo -e "\n$COUNT  compressed files were created."
 exit $ERROR
