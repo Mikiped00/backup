@@ -1,5 +1,5 @@
 # Backup
-Shell script to backup user's /home directory in GNU/Linux distros
+Shell script to backup user's /home directory in GNU/Linux distros.
 
 ## What is it? 📖
 <p align="justify">The script carries out a backup of /home directory of one or more users, depending on the arguments that it receives. It copies all the files and subdirectories located from the <b>/home</b> directory, excluding hidden files. The backup will be stored in a <b>.tar.gz</b> file in <b>/tmp</b> directory, and its name will be <i>username_date.tar.gz</i>. The date format will be <i>YYYY_MM_DD</i>.</p>
